@@ -34,3 +34,7 @@ PLATFORM="linux/amd64,linux/arm64"
 echo -ne "[INFO]\tBuilding for ${DIST} on ${PLATFORM}\n"
 docker buildx build --build-arg P4RELEASE=${P4RELEASE} --platform ${PLATFORM} -t ${TAG} . || exit 1
 echo -ne "[INFO]\tSuccess! Tagged as ${TAG}\n"
+
+echo -ne "[INFO]\tPushing tag ${TAG}\n"
+docker push ${TAG} || exit 1
+echo -ne "[INFO]\tSuccess! Pushed ${TAG}\n"

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+UID="$(id -u)"
+GID="$(id -g)"
+
 if [[ ! -d "/opt/p4d" ]]; then
     echo -ne "[ERR]\t/opt/p4d not found - please mount a volume here"
     exit 1
@@ -12,8 +15,8 @@ if [[ "${EULA}" != "true" ]]; then
     echo "= This software is subject to the Perforce T&Cs, and the P4 supplimental T&Cs. ="
     echo "= Please visit the following URLs and read the T&Cs in full.                   ="
     echo "=                                                                              ="
-    echo "= #1: https://www.perforce.com/system/files/2026-03/2026.03.24%20Perforce%20Master%20Terms%20and%20Conditions.pdf
-    echo "= #2: https://www.perforce.com/system/files/2026-02/2026.02.26%20Perforce%20P4%20Supplemental%20Terms.pdf
+    echo "= #1: https://www.perforce.com/system/files/2026-03/2026.03.24%20Perforce%20Master%20Terms%20and%20Conditions.pdf"
+    echo "= #2: https://www.perforce.com/system/files/2026-02/2026.02.26%20Perforce%20P4%20Supplemental%20Terms.pdf"
     echo "=                                                                              ="
     echo "= Once you are satisfied, please pass EULA=true as an environment variable to  ="
     echo "= surpress this message.                                                       ="
@@ -23,16 +26,21 @@ if [[ "${EULA}" != "true" ]]; then
 fi
 
 if [[ ! -d "/opt/p4d/ssl" ]]; then
-    mkdir -p /opt/p4d/ssl
+    mkdir -p /opt/p4d/ssl || exit 1
+    chmod 0700 /opt/p4d/ssl || exit 1
     echo -ne "[INFO]\tCreating new SSL certificates\n"
     openssl req -new -newkey rsa:2048 \
         -days 3650 -nodes -x509 \
+        -subj "/C=GB/ST=England/L=Westcountry/O=Docker/CN=p4.localnet" \
         -keyout /opt/p4d/ssl/privatekey.txt \
-        -out /opt/p4d/ssl/certificate.txt || exit 1 
+        -out /opt/p4d/ssl/certificate.txt || exit 1
+    chmod 0600 /opt/p4d/ssl/privatekey.txt
+    chmod 0600 /opt/p4d/ssl/certificate.txt
+    chown -R $UID:$GID /opt/p4d/ssl
 fi
 
 if [[ ! -f "/opt/p4d/.p4config" ]]; then
-    echo -ne "[INFO]\tCreating new .p4enviro file\n"
+    echo -ne "[INFO]\tCreating new .p4config file\n"
     touch /opt/p4d/.p4config || exit 1
 fi
 if [[ ! -f "/opt/p4d/.p4enviro" ]]; then
